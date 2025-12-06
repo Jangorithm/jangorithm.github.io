@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shell Game & Email Slot</title>
+    <title>jangorithm</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
@@ -75,13 +75,11 @@
             box-shadow: inset -2px -2px 6px rgba(0,0,0,0.3);
         }
         
-        /* 컵 들어올리기 */
         .lifted .cup { transform: translateY(-70px); }
         .ball.visible { display: block; }
 
         .message { margin-top: 20px; font-size: 1.8rem; height: 40px; font-weight: bold; }
 
-        /* 슬롯머신 스타일 */
         .slot-wrapper {
             display: flex;
             flex-direction: column;
@@ -154,21 +152,16 @@
 
 
 <script>
-    let winningCupIndex = 1; // 정답 컵 ID (초기값: 가운데 컵)
+    let winningCupIndex = 1; 
     let isShuffling = false;
     
-    // 화면상의 x좌표 위치 (왼쪽, 가운데, 오른쪽)
     const positionCoords = [50, 250, 450]; 
-    
-    // 현재 각 위치(슬롯 0, 1, 2)에 어떤 컵(ID 0, 1, 2)이 있는지 추적하는 배열
-    // index: 화면상 위치(왼,중,오) / value: 컵 ID
     let slots = [0, 1, 2]; 
 
     function startGame() {
         document.getElementById('stage-intro').classList.add('hidden');
         document.getElementById('stage-game').classList.remove('hidden');
         
-        // 정답 컵 보여주기
         const winningBall = document.getElementById(`ball${winningCupIndex}`);
         const winningCupContainer = document.getElementById(`cup${winningCupIndex}`);
         
@@ -176,7 +169,6 @@
         winningCupContainer.classList.add('lifted');
         document.getElementById('gameMessage').innerText = "Watch the ball...";
 
-        // 잠시 후 닫고 섞기 시작
         setTimeout(() => {
             winningCupContainer.classList.remove('lifted');
             setTimeout(() => {
@@ -194,26 +186,21 @@
         const speed = 350; 
 
         for (let i = 0; i < shuffleCount; i++) {
-            // 화면상 위치(Slot) 두 곳을 랜덤 선택 (예: 왼쪽(0)과 오른쪽(2))
             let slotA = Math.floor(Math.random() * 3);
             let slotB = (slotA + 1 + Math.floor(Math.random() * 2)) % 3;
 
-            // 해당 위치에 있는 컵 ID 찾기
             let cupId_A = slots[slotA];
             let cupId_B = slots[slotB];
 
-            // DOM 요소 가져오기
             let cupElem_A = document.getElementById(`cup${cupId_A}`);
             let cupElem_B = document.getElementById(`cup${cupId_B}`);
 
-            // 위치 교환 애니메이션
             cupElem_A.style.transition = `left ${speed}ms ease-in-out`;
             cupElem_B.style.transition = `left ${speed}ms ease-in-out`;
 
             cupElem_A.style.left = `${positionCoords[slotB]}px`;
             cupElem_B.style.left = `${positionCoords[slotA]}px`;
 
-            // 배열 데이터 업데이트 (컵 ID 위치 교환)
             slots[slotA] = cupId_B;
             slots[slotB] = cupId_A;
             
@@ -224,26 +211,20 @@
         document.getElementById('gameMessage').innerText = "Where is the ball?";
     }
 
-    // [수정된 부분] 컵 클릭 함수
-    // clickedCupId: HTML onclick에서 직접 넘겨준 컵의 고유 ID (0, 1, 2)
     function pickCup(clickedCupId) {
         if (isShuffling) return; 
 
         const pickedCupContainer = document.getElementById(`cup${clickedCupId}`);
         const ball = document.getElementById(`ball${clickedCupId}`);
 
-        // 1. 클릭한 바로 그 컵을 들어올림 (이제 엉뚱한 컵이 들리지 않음)
         pickedCupContainer.classList.add('lifted');
 
-        // 2. 정답 체크
         if (clickedCupId === winningCupIndex) {
-            // 정답!
             ball.classList.add('visible');
             document.getElementById('gameMessage').style.color = '#4cd964';
             document.getElementById('gameMessage').innerText = "You found it!";
-            isShuffling = true; // 중복 클릭 방지
+            isShuffling = true; 
 
-            // 폭죽 효과
             confetti({
                 particleCount: 200,
                 spread: 80,
@@ -251,7 +232,6 @@
                 colors: ['#ff4757', '#00d2ff', '#ffffff', '#ffd700']
             });
 
-            // 화면 전환
             setTimeout(() => {
                 document.getElementById('stage-game').classList.add('hidden');
                 document.getElementById('stage-result').classList.remove('hidden');
@@ -259,7 +239,6 @@
             }, 2500);
 
         } else {
-            // 오답
             document.getElementById('gameMessage').style.color = '#ff4757';
             document.getElementById('gameMessage').innerText = "Empty! Try again.";
             setTimeout(() => {
@@ -272,7 +251,6 @@
         }
     }
 
-    // --- 슬롯머신 로직 (변화 없음) ---
     function startSlotMachine() {
         const targetText = "kowm6170@naver.com";
         const charPool = "abcdefghijklmnopqrstuvwxyz0123456789@."; 
