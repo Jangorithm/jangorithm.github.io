@@ -4,139 +4,251 @@
     <meta charset="UTF-8">
     <title>jangorithm</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #ff0055;
+            --bg-dark: #0b0c15;
+            --bg-card: #151725;
+            --gold: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+            --metallic: linear-gradient(135deg, #d4af37 0%, #a67c00 50%, #ffd700 100%);
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #1a1a1a;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 85, 0.1) 0%, transparent 20%);
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Montserrat', sans-serif;
             margin: 0;
             overflow: hidden; 
         }
 
         .hidden { display: none !important; }
-        .stage-container { text-align: center; width: 100%; }
+        .stage-container { 
+            text-align: center; 
+            width: 100%; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+        }
+
+        h1 { font-size: 3.5rem; margin-bottom: 50px; background: linear-gradient(to right, #fff, #999); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 2rem; color: var(--primary); margin-bottom: 40px; }
 
         .play-btn {
-            padding: 20px 50px;
-            font-size: 2rem;
-            font-weight: bold;
-            background: #ff4757;
-            color: white;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            color: var(--bg-dark);
+            background: var(--primary);
             border: none;
-            border-radius: 10px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
         }
-        .play-btn:hover { transform: scale(1.1); }
+        
+        .play-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+        .play-btn:hover::before { left: 100%; }
+        .play-btn:hover { transform: translateY(-3px); box-shadow: 0 0 40px rgba(0, 242, 255, 0.6); }
 
         .game-area {
             position: relative;
-            width: 600px;
-            height: 300px;
-            margin: 0 auto 20px auto;
+            width: 800px;
+            height: 400px;
+            perspective: 1000px;
         }
         
         .cup-container {
             position: absolute;
             bottom: 50px;
-            width: 100px;
-            height: 120px;
+            width: 120px;
+            height: 140px;
             cursor: pointer;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6));
+            transition: transform 0.2s;
         }
+        .cup-container:hover { transform: scale(1.02); }
 
         .cup {
             width: 100%;
             height: 100%;
-            background: #d4af37;
-            border-radius: 10px 10px 40% 40%;
-            border: 4px solid #b38f2d;
+            background: var(--metallic);
+            border-radius: 15px 15px 45% 45%;
             position: relative;
             z-index: 2;
-            transition: transform 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+        
+        .cup::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0.7;
+        }
+        
+        .cup::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; height: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50px;
+            filter: blur(2px);
         }
 
         .ball {
             position: absolute;
-            bottom: 10px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 30px;
-            height: 30px;
-            background: #ff4757;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 35% 35%, #ff4757, #8a0e1b);
             border-radius: 50%;
             z-index: 1;
             display: none; 
-            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
         }
         
-        .lifted .cup { transform: translateY(-70px); }
+        .lifted .cup { transform: translateY(-100px); }
         .ball.visible { display: block; }
 
-        .message { margin-top: 20px; font-size: 1.8rem; height: 40px; font-weight: bold; }
+        .message { 
+            margin-top: 20px; 
+            font-size: 1.5rem; 
+            height: 40px; 
+            font-weight: 600; 
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
 
         .slot-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 60px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+
         .slot-machine {
             display: flex;
-            gap: 2px;
-            padding: 20px 40px;
-            background: #2b2b2b;
-            border-radius: 15px;
-            border: 4px solid #00d2ff;
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
-            margin-bottom: 30px;
+            gap: 4px;
+            padding: 20px;
+            background: #000;
+            border-radius: 12px;
+            border: 2px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            margin-bottom: 40px;
         }
+
         .window {
-            width: 35px; height: 50px;
-            overflow: hidden; background: #ffffff; color: #333;
-            border-radius: 4px; position: relative;
-            font-weight: bold; font-size: 1.8rem;
+            width: 45px; height: 65px;
+            overflow: hidden; 
+            background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+            color: var(--primary);
+            border-radius: 6px; 
+            position: relative;
+            font-weight: 700; 
+            font-size: 2.2rem;
+            font-family: 'Orbitron', monospace;
+            box-shadow: inset 0 0 10px rgba(0,0,0,1);
+            border: 1px solid #333;
         }
+        
+        .window::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 30px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+            z-index: 10;
+        }
+        .window::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 30px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.8), transparent);
+            z-index: 10;
+        }
+
         .reel {
             display: flex; flex-direction: column;
-            text-align: center; line-height: 50px;
+            text-align: center; line-height: 65px;
         }
+
         .copy-btn {
-            padding: 12px 30px; font-size: 1.2rem; font-weight: bold;
-            color: #1a1a1a; background-color: #00d2ff;
-            border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
-            transition: all 0.3s ease;
-            opacity: 0; transform: translateY(20px); pointer-events: none;
+            padding: 15px 40px; 
+            font-size: 1.1rem; 
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            color: white; 
+            background: var(--secondary);
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 0, 85, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0; 
+            transform: translateY(30px); 
+            pointer-events: none;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
+
         .copy-btn.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .copy-btn:hover { background-color: #7ce4ff; transform: scale(1.05); }
+        .copy-btn:hover { background: #ff3377; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 0, 85, 0.5); }
         .copy-btn:active { transform: scale(0.95); }
+
     </style>
 </head>
 <body>
 
 <div id="stage-intro" class="stage-container">
-    <h1 style="margin-bottom: 40px; font-size: 2.5rem;">TEST YOUR LUCK</h1>
-    <button class="play-btn" onclick="startGame()">PLAY GAME</button>
+    <h1>JANGORITHM</h1>
+    <button class="play-btn" onclick="startGame()">START GAME</button>
 </div>
 
 <div id="stage-game" class="stage-container hidden">
-    <h2 style="color: #00d2ff;">FIND THE BALL</h2>
+    <h2>Find The Ball</h2>
     <div class="game-area">
-        <div class="cup-container" id="cup0" style="left: 50px;" onclick="pickCup(0)">
+        <div class="cup-container" id="cup0" style="left: 140px;" onclick="pickCup(0)">
             <div class="cup"></div>
             <div class="ball" id="ball0"></div>
         </div>
-        <div class="cup-container" id="cup1" style="left: 250px;" onclick="pickCup(1)">
+        <div class="cup-container" id="cup1" style="left: 340px;" onclick="pickCup(1)">
             <div class="cup"></div>
             <div class="ball" id="ball1"></div>
         </div>
-        <div class="cup-container" id="cup2" style="left: 450px;" onclick="pickCup(2)">
+        <div class="cup-container" id="cup2" style="left: 540px;" onclick="pickCup(2)">
             <div class="cup"></div>
             <div class="ball" id="ball2"></div>
         </div>
@@ -144,10 +256,12 @@
     <div class="message" id="gameMessage"></div>
 </div>
 
-<div id="stage-result" class="stage-container hidden slot-wrapper">
-    <h2 style="color: #4cd964; font-size: 2.5rem; margin-bottom: 30px;">CONGRATULATIONS!</h2>
-    <div class="slot-machine" id="slotMachine"></div>
-    <button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email</button>
+<div id="stage-result" class="stage-container hidden">
+    <div class="slot-wrapper">
+        <h2 style="color: #4cd964; margin-bottom: 30px;">ACCESS GRANTED</h2>
+        <div class="slot-machine" id="slotMachine"></div>
+        <button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email Address</button>
+    </div>
 </div>
 
 
@@ -155,7 +269,7 @@
     let winningCupIndex = 1; 
     let isShuffling = false;
     
-    const positionCoords = [50, 250, 450]; 
+    const positionCoords = [140, 340, 540]; 
     let slots = [0, 1, 2]; 
 
     function startGame() {
@@ -167,7 +281,8 @@
         
         winningBall.classList.add('visible');
         winningCupContainer.classList.add('lifted');
-        document.getElementById('gameMessage').innerText = "Watch the ball...";
+        document.getElementById('gameMessage').innerText = "Memorize the location...";
+        document.getElementById('gameMessage').style.color = '#aaa';
 
         setTimeout(() => {
             winningCupContainer.classList.remove('lifted');
@@ -180,7 +295,7 @@
 
     async function shuffleCups() {
         isShuffling = true;
-        document.getElementById('gameMessage').innerText = "Shuffling...";
+        document.getElementById('gameMessage').innerText = "Shuffling data...";
         
         const shuffleCount = 10; 
         const speed = 350; 
@@ -208,7 +323,8 @@
         }
 
         isShuffling = false;
-        document.getElementById('gameMessage').innerText = "Where is the ball?";
+        document.getElementById('gameMessage').innerText = "Select the encrypted container";
+        document.getElementById('gameMessage').style.color = '#fff';
     }
 
     function pickCup(clickedCupId) {
@@ -221,31 +337,31 @@
 
         if (clickedCupId === winningCupIndex) {
             ball.classList.add('visible');
-            document.getElementById('gameMessage').style.color = '#4cd964';
-            document.getElementById('gameMessage').innerText = "You found it!";
+            document.getElementById('gameMessage').style.color = '#00f2ff';
+            document.getElementById('gameMessage').innerText = "SUCCESS!";
             isShuffling = true; 
 
             confetti({
                 particleCount: 200,
-                spread: 80,
+                spread: 100,
                 origin: { y: 0.6 },
-                colors: ['#ff4757', '#00d2ff', '#ffffff', '#ffd700']
+                colors: ['#00f2ff', '#ff0055', '#ffffff']
             });
 
             setTimeout(() => {
                 document.getElementById('stage-game').classList.add('hidden');
                 document.getElementById('stage-result').classList.remove('hidden');
                 startSlotMachine(); 
-            }, 2500);
+            }, 2000);
 
         } else {
-            document.getElementById('gameMessage').style.color = '#ff4757';
-            document.getElementById('gameMessage').innerText = "Empty! Try again.";
+            document.getElementById('gameMessage').style.color = '#ff0055';
+            document.getElementById('gameMessage').innerText = "Access Denied. Try Again.";
             setTimeout(() => {
                  pickedCupContainer.classList.remove('lifted');
                  if(!isShuffling) {
-                     document.getElementById('gameMessage').style.color = 'white';
-                     document.getElementById('gameMessage').innerText = "Where is the ball?";
+                     document.getElementById('gameMessage').style.color = '#fff';
+                     document.getElementById('gameMessage').innerText = "Select the encrypted container";
                  }
             }, 1200);
         }
@@ -256,7 +372,7 @@
         const charPool = "abcdefghijklmnopqrstuvwxyz0123456789@."; 
         const container = document.getElementById('slotMachine');
         const copyBtn = document.getElementById('copyBtn');
-        const itemHeight = 50;
+        const itemHeight = 65; // CSS window height matched
 
         container.innerHTML = ''; 
 
@@ -269,7 +385,7 @@
 
             let content = '';
             const poolLength = charPool.length;
-            const loops = 3; 
+            const loops = 4; 
             
             for (let k = 0; k < loops; k++) {
                 for (let i = 0; i < poolLength; i++) {
@@ -281,12 +397,12 @@
             container.appendChild(windowDiv);
 
             setTimeout(() => {
-                reelDiv.style.transition = 'transform 2.5s cubic-bezier(0.15, 0.9, 0.25, 1)';
+                reelDiv.style.transition = 'transform 3s cubic-bezier(0.19, 1, 0.22, 1)';
                 const targetIndex = charPool.indexOf(targetChar);
                 const safeIndex = targetIndex === -1 ? 0 : targetIndex;
                 const finalPosition = ((loops - 1) * poolLength + safeIndex) * itemHeight;
                 reelDiv.style.transform = `translateY(-${finalPosition}px)`;
-            }, 100 + index * 100);
+            }, 100 + index * 80);
         }
 
         for (let i = 0; i < targetText.length; i++) {
@@ -295,20 +411,20 @@
 
         setTimeout(() => {
             copyBtn.classList.add('show');
-        }, 3500);
+        }, 4000);
     }
 
     function copyEmail() {
         const targetText = "kowm6170@naver.com";
         const copyBtn = document.getElementById('copyBtn');
         navigator.clipboard.writeText(targetText).then(() => {
-            const originalText = "Copy Email"; 
-            copyBtn.innerText = "Copied! ✅"; 
-            copyBtn.style.backgroundColor = "#4cd964"; 
+            const originalText = "Copy Email Address"; 
+            copyBtn.innerText = "Copied to Clipboard! ✓"; 
+            copyBtn.style.background = "#4cd964"; 
             setTimeout(() => {
                 copyBtn.innerText = originalText;
-                copyBtn.style.backgroundColor = "#00d2ff"; 
-            }, 2000);
+                copyBtn.style.background = "#ff0055"; 
+            }, 2500);
         }).catch(err => { console.error(err); alert('Failed to copy.'); });
     }
 </script>
