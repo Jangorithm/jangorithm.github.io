@@ -1,21 +1,92 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Email Slot Machine</title>
+    <title>Shell Game & Email Slot</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #1a1a1a;
             color: white;
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
+            overflow: hidden; 
         }
 
+        .hidden { display: none !important; }
+        .stage-container { text-align: center; width: 100%; }
+
+        .play-btn {
+            padding: 20px 50px;
+            font-size: 2rem;
+            font-weight: bold;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .play-btn:hover { transform: scale(1.1); }
+
+        .game-area {
+            position: relative;
+            width: 600px;
+            height: 300px;
+            margin: 0 auto 20px auto;
+        }
+        
+        .cup-container {
+            position: absolute;
+            bottom: 50px;
+            width: 100px;
+            height: 120px;
+            cursor: pointer;
+        }
+
+        .cup {
+            width: 100%;
+            height: 100%;
+            background: #d4af37;
+            border-radius: 10px 10px 40% 40%;
+            border: 4px solid #b38f2d;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .ball {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: #ff4757;
+            border-radius: 50%;
+            z-index: 1;
+            display: none; 
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.3);
+        }
+        
+        /* 컵 들어올리기 */
+        .lifted .cup { transform: translateY(-70px); }
+        .ball.visible { display: block; }
+
+        .message { margin-top: 20px; font-size: 1.8rem; height: 40px; font-weight: bold; }
+
+        /* 슬롯머신 스타일 */
+        .slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .slot-machine {
             display: flex;
             gap: 2px;
@@ -26,124 +97,241 @@
             box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
             margin-bottom: 30px;
         }
-
         .window {
-            width: 35px;
-            height: 50px;
-            overflow: hidden;
-            background: #ffffff;
-            color: #333;
-            border-radius: 4px;
-            position: relative;
-            font-weight: bold;
-            font-size: 1.8rem;
+            width: 35px; height: 50px;
+            overflow: hidden; background: #ffffff; color: #333;
+            border-radius: 4px; position: relative;
+            font-weight: bold; font-size: 1.8rem;
         }
-
         .reel {
-            display: flex;
-            flex-direction: column;
-            transition: transform 2.5s cubic-bezier(0.15, 0.9, 0.25, 1);
-            text-align: center;
-            line-height: 50px;
+            display: flex; flex-direction: column;
+            text-align: center; line-height: 50px;
         }
-
         .copy-btn {
-            padding: 12px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #1a1a1a;
-            background-color: #00d2ff;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
+            padding: 12px 30px; font-size: 1.2rem; font-weight: bold;
+            color: #1a1a1a; background-color: #00d2ff;
+            border: none; border-radius: 50px; cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
             transition: all 0.3s ease;
-            opacity: 0; 
-            transform: translateY(20px);
-            pointer-events: none;
+            opacity: 0; transform: translateY(20px); pointer-events: none;
         }
-
-        .copy-btn.show {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-
-        .copy-btn:hover {
-            background-color: #7ce4ff;
-            transform: scale(1.05);
-        }
-
-        .copy-btn:active {
-            transform: scale(0.95);
-        }
+        .copy-btn.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .copy-btn:hover { background-color: #7ce4ff; transform: scale(1.05); }
+        .copy-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-<div class="slot-machine" id="slotMachine"></div>
-<button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email</button>
+<div id="stage-intro" class="stage-container">
+    <h1 style="margin-bottom: 40px; font-size: 2.5rem;">TEST YOUR LUCK</h1>
+    <button class="play-btn" onclick="startGame()">PLAY GAME</button>
+</div>
+
+<div id="stage-game" class="stage-container hidden">
+    <h2 style="color: #00d2ff;">FIND THE BALL</h2>
+    <div class="game-area">
+        <div class="cup-container" id="cup0" style="left: 50px;" onclick="pickCup(0)">
+            <div class="cup"></div>
+            <div class="ball" id="ball0"></div>
+        </div>
+        <div class="cup-container" id="cup1" style="left: 250px;" onclick="pickCup(1)">
+            <div class="cup"></div>
+            <div class="ball" id="ball1"></div>
+        </div>
+        <div class="cup-container" id="cup2" style="left: 450px;" onclick="pickCup(2)">
+            <div class="cup"></div>
+            <div class="ball" id="ball2"></div>
+        </div>
+    </div>
+    <div class="message" id="gameMessage"></div>
+</div>
+
+<div id="stage-result" class="stage-container hidden slot-wrapper">
+    <h2 style="color: #4cd964; font-size: 2.5rem; margin-bottom: 30px;">CONGRATULATIONS!</h2>
+    <div class="slot-machine" id="slotMachine"></div>
+    <button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email</button>
+</div>
+
 
 <script>
-    const targetText = "kowm6170@naver.com";
-    const charPool = "abcdefghijklmnopqrstuvwxyz0123456789@."; 
-    const container = document.getElementById('slotMachine');
-    const copyBtn = document.getElementById('copyBtn');
-    const itemHeight = 50;
+    let winningCupIndex = 1; // 정답 컵 ID (초기값: 가운데 컵)
+    let isShuffling = false;
+    
+    // 화면상의 x좌표 위치 (왼쪽, 가운데, 오른쪽)
+    const positionCoords = [50, 250, 450]; 
+    
+    // 현재 각 위치(슬롯 0, 1, 2)에 어떤 컵(ID 0, 1, 2)이 있는지 추적하는 배열
+    // index: 화면상 위치(왼,중,오) / value: 컵 ID
+    let slots = [0, 1, 2]; 
 
-    function createReel(targetChar, index) {
-        const windowDiv = document.createElement('div');
-        windowDiv.className = 'window';
-
-        const reelDiv = document.createElement('div');
-        reelDiv.className = 'reel';
-
-        let content = '';
-        const poolLength = charPool.length;
-        const loops = 3; 
+    function startGame() {
+        document.getElementById('stage-intro').classList.add('hidden');
+        document.getElementById('stage-game').classList.remove('hidden');
         
-        for (let k = 0; k < loops; k++) {
-            for (let i = 0; i < poolLength; i++) {
-                content += `<div>${charPool[i]}</div>`;
-            }
+        // 정답 컵 보여주기
+        const winningBall = document.getElementById(`ball${winningCupIndex}`);
+        const winningCupContainer = document.getElementById(`cup${winningCupIndex}`);
+        
+        winningBall.classList.add('visible');
+        winningCupContainer.classList.add('lifted');
+        document.getElementById('gameMessage').innerText = "Watch the ball...";
+
+        // 잠시 후 닫고 섞기 시작
+        setTimeout(() => {
+            winningCupContainer.classList.remove('lifted');
+            setTimeout(() => {
+                winningBall.classList.remove('visible');
+                shuffleCups();
+            }, 500);
+        }, 1500);
+    }
+
+    async function shuffleCups() {
+        isShuffling = true;
+        document.getElementById('gameMessage').innerText = "Shuffling...";
+        
+        const shuffleCount = 10; 
+        const speed = 350; 
+
+        for (let i = 0; i < shuffleCount; i++) {
+            // 화면상 위치(Slot) 두 곳을 랜덤 선택 (예: 왼쪽(0)과 오른쪽(2))
+            let slotA = Math.floor(Math.random() * 3);
+            let slotB = (slotA + 1 + Math.floor(Math.random() * 2)) % 3;
+
+            // 해당 위치에 있는 컵 ID 찾기
+            let cupId_A = slots[slotA];
+            let cupId_B = slots[slotB];
+
+            // DOM 요소 가져오기
+            let cupElem_A = document.getElementById(`cup${cupId_A}`);
+            let cupElem_B = document.getElementById(`cup${cupId_B}`);
+
+            // 위치 교환 애니메이션
+            cupElem_A.style.transition = `left ${speed}ms ease-in-out`;
+            cupElem_B.style.transition = `left ${speed}ms ease-in-out`;
+
+            cupElem_A.style.left = `${positionCoords[slotB]}px`;
+            cupElem_B.style.left = `${positionCoords[slotA]}px`;
+
+            // 배열 데이터 업데이트 (컵 ID 위치 교환)
+            slots[slotA] = cupId_B;
+            slots[slotB] = cupId_A;
+            
+            await new Promise(r => setTimeout(r, speed + 20));
         }
-        
-        reelDiv.innerHTML = content;
-        windowDiv.appendChild(reelDiv);
-        container.appendChild(windowDiv);
+
+        isShuffling = false;
+        document.getElementById('gameMessage').innerText = "Where is the ball?";
+    }
+
+    // [수정된 부분] 컵 클릭 함수
+    // clickedCupId: HTML onclick에서 직접 넘겨준 컵의 고유 ID (0, 1, 2)
+    function pickCup(clickedCupId) {
+        if (isShuffling) return; 
+
+        const pickedCupContainer = document.getElementById(`cup${clickedCupId}`);
+        const ball = document.getElementById(`ball${clickedCupId}`);
+
+        // 1. 클릭한 바로 그 컵을 들어올림 (이제 엉뚱한 컵이 들리지 않음)
+        pickedCupContainer.classList.add('lifted');
+
+        // 2. 정답 체크
+        if (clickedCupId === winningCupIndex) {
+            // 정답!
+            ball.classList.add('visible');
+            document.getElementById('gameMessage').style.color = '#4cd964';
+            document.getElementById('gameMessage').innerText = "You found it!";
+            isShuffling = true; // 중복 클릭 방지
+
+            // 폭죽 효과
+            confetti({
+                particleCount: 200,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#ff4757', '#00d2ff', '#ffffff', '#ffd700']
+            });
+
+            // 화면 전환
+            setTimeout(() => {
+                document.getElementById('stage-game').classList.add('hidden');
+                document.getElementById('stage-result').classList.remove('hidden');
+                startSlotMachine(); 
+            }, 2500);
+
+        } else {
+            // 오답
+            document.getElementById('gameMessage').style.color = '#ff4757';
+            document.getElementById('gameMessage').innerText = "Empty! Try again.";
+            setTimeout(() => {
+                 pickedCupContainer.classList.remove('lifted');
+                 if(!isShuffling) {
+                     document.getElementById('gameMessage').style.color = 'white';
+                     document.getElementById('gameMessage').innerText = "Where is the ball?";
+                 }
+            }, 1200);
+        }
+    }
+
+    // --- 슬롯머신 로직 (변화 없음) ---
+    function startSlotMachine() {
+        const targetText = "kowm6170@naver.com";
+        const charPool = "abcdefghijklmnopqrstuvwxyz0123456789@."; 
+        const container = document.getElementById('slotMachine');
+        const copyBtn = document.getElementById('copyBtn');
+        const itemHeight = 50;
+
+        container.innerHTML = ''; 
+
+        function createReel(targetChar, index) {
+            const windowDiv = document.createElement('div');
+            windowDiv.className = 'window';
+            const reelDiv = document.createElement('div');
+            reelDiv.className = 'reel';
+            reelDiv.style.transform = `translateY(${itemHeight}px)`; 
+
+            let content = '';
+            const poolLength = charPool.length;
+            const loops = 3; 
+            
+            for (let k = 0; k < loops; k++) {
+                for (let i = 0; i < poolLength; i++) {
+                    content += `<div>${charPool[i]}</div>`;
+                }
+            }
+            reelDiv.innerHTML = content;
+            windowDiv.appendChild(reelDiv);
+            container.appendChild(windowDiv);
+
+            setTimeout(() => {
+                reelDiv.style.transition = 'transform 2.5s cubic-bezier(0.15, 0.9, 0.25, 1)';
+                const targetIndex = charPool.indexOf(targetChar);
+                const safeIndex = targetIndex === -1 ? 0 : targetIndex;
+                const finalPosition = ((loops - 1) * poolLength + safeIndex) * itemHeight;
+                reelDiv.style.transform = `translateY(-${finalPosition}px)`;
+            }, 100 + index * 100);
+        }
+
+        for (let i = 0; i < targetText.length; i++) {
+            createReel(targetText[i], i);
+        }
 
         setTimeout(() => {
-            const targetIndex = charPool.indexOf(targetChar);
-            const safeIndex = targetIndex === -1 ? 0 : targetIndex;
-            const finalPosition = ((loops - 1) * poolLength + safeIndex) * itemHeight;
-
-            reelDiv.style.transform = `translateY(-${finalPosition}px)`;
-            
-        }, 100 + index * 100);
+            copyBtn.classList.add('show');
+        }, 3500);
     }
-
-    for (let i = 0; i < targetText.length; i++) {
-        createReel(targetText[i], i);
-    }
-
-    setTimeout(() => {
-        copyBtn.classList.add('show');
-    }, 3500);
 
     function copyEmail() {
+        const targetText = "kowm6170@naver.com";
+        const copyBtn = document.getElementById('copyBtn');
         navigator.clipboard.writeText(targetText).then(() => {
             const originalText = "Copy Email"; 
             copyBtn.innerText = "Copied! ✅"; 
             copyBtn.style.backgroundColor = "#4cd964"; 
-
             setTimeout(() => {
                 copyBtn.innerText = originalText;
                 copyBtn.style.backgroundColor = "#00d2ff"; 
             }, 2000);
-        }).catch(err => {
-            console.error(err);
-            alert('Failed to copy.');
-        });
+        }).catch(err => { console.error(err); alert('Failed to copy.'); });
     }
 </script>
 
