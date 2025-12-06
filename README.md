@@ -1,1 +1,1 @@
-# jangorithm.github.io
+# jangorithm
