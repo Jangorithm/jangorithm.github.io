@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Neural FCNN Decryptor</title>
+    <title>JANGORITHM - Neural Decryptor</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -39,12 +39,22 @@
         }
 
         h1 { 
-            font-size: 3.5rem; margin-bottom: 50px; 
+            font-size: 3.5rem; margin-bottom: 20px; 
             background: linear-gradient(to right, var(--neon-blue), var(--neon-purple));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             font-weight: 800; letter-spacing: 5px;
         }
         h2 { font-size: 2rem; color: var(--neon-blue); margin-bottom: 20px; letter-spacing: 3px; }
+
+        /* 새로 추가된 서브 텍스트 스타일 */
+        .sub-text {
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            margin-bottom: 50px;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            font-family: 'Share Tech Mono', monospace;
+        }
 
         .play-btn {
             padding: 20px 70px; font-size: 1.5rem; font-weight: 700;
@@ -162,7 +172,8 @@
 <div id="particles-js"></div>
 
 <div id="stage-intro" class="stage-container">
-    <h1>NEURAL DECRYPTOR</h1>
+    <h1>JANGORITHM</h1>
+    <p class="sub-text">DECRYPT OFFICIAL EMAIL ADDRESS</p>
     <button class="play-btn" onclick="startGame()">INIT SYSTEM</button>
 </div>
 
@@ -189,268 +200,4 @@
         <div class="layers-container">
             <div class="layer-column" id="layer-input"></div>
             <div class="layer-column" id="layer-hidden-1"></div>
-            <div class="layer-column" id="layer-hidden-2"></div>
-            <div class="layer-column" id="layer-output"></div>
-        </div>
-        <div class="output-display" id="email-output"></div>
-        <button class="copy-btn" id="copyBtn" onclick="copyEmail()">COPY RESULT</button>
-    </div>
-</div>
-
-<script>
-    particlesJS("particles-js", {
-        "particles": {
-            "number": { "value": 80 }, "color": { "value": "#00f3ff" }, "opacity": { "value": 0.5 },
-            "size": { "value": 2 }, "line_linked": { "enable": true, "distance": 150, "color": "#00f3ff", "opacity": 0.2, "width": 1 },
-            "move": { "enable": true, "speed": 1 }
-        }
-    });
-
-    let winningCupIndex = 1; 
-    let isShuffling = false;
-    const positionCoords = [140, 340, 540]; 
-    let slots = [0, 1, 2]; 
-
-    function startGame() {
-        document.getElementById('stage-intro').classList.add('hidden');
-        document.getElementById('stage-game').classList.remove('hidden');
-        
-        const winningBall = document.getElementById(`ball${winningCupIndex}`);
-        const winningCupContainer = document.getElementById(`cup${winningCupIndex}`);
-        winningBall.classList.add('visible');
-        winningCupContainer.classList.add('lifted');
-        document.getElementById('gameMessage').innerText = "Locate the Core...";
-
-        setTimeout(() => {
-            winningCupContainer.classList.remove('lifted');
-            setTimeout(() => {
-                winningBall.classList.remove('visible');
-                shuffleCups();
-            }, 500);
-        }, 1500);
-    }
-
-    async function shuffleCups() {
-        isShuffling = true;
-        document.getElementById('gameMessage').innerText = "Encrypting Position...";
-        const shuffleCount = 10; const speed = 300; 
-
-        for (let i = 0; i < shuffleCount; i++) {
-            let slotA = Math.floor(Math.random() * 3);
-            let slotB = (slotA + 1 + Math.floor(Math.random() * 2)) % 3;
-            let cupId_A = slots[slotA]; let cupId_B = slots[slotB];
-            
-            let elemA = document.getElementById(`cup${cupId_A}`);
-            let elemB = document.getElementById(`cup${cupId_B}`);
-
-            elemA.style.transition = `left ${speed}ms ease-in-out`;
-            elemB.style.transition = `left ${speed}ms ease-in-out`;
-            elemA.style.left = `${positionCoords[slotB]}px`;
-            elemB.style.left = `${positionCoords[slotA]}px`;
-
-            slots[slotA] = cupId_B; slots[slotB] = cupId_A;
-            await new Promise(r => setTimeout(r, speed + 20));
-        }
-        isShuffling = false;
-        document.getElementById('gameMessage').innerText = "Select the Node";
-    }
-
-    function pickCup(id) {
-        if (isShuffling) return;
-        const cup = document.getElementById(`cup${id}`);
-        const ball = document.getElementById(`ball${id}`);
-        cup.classList.add('lifted');
-
-        if (id === winningCupIndex) {
-            ball.classList.add('visible');
-            document.getElementById('gameMessage').innerText = "ACCESS GRANTED";
-            document.getElementById('gameMessage').style.color = "#00f3ff";
-            confetti({ particleCount: 150, spread: 80, colors: ['#00f3ff', '#bc13fe'] });
-            setTimeout(() => {
-                document.getElementById('stage-game').classList.add('hidden');
-                document.getElementById('stage-result').classList.remove('hidden');
-                initFCNN(); 
-            }, 2000);
-        } else {
-            document.getElementById('gameMessage').innerText = "ACCESS DENIED";
-            document.getElementById('gameMessage').style.color = "#ff0055";
-            setTimeout(() => cup.classList.remove('lifted'), 1000);
-        }
-    }
-
-    const targetEmail = "kowm6170@naver.com";
-    const layerConfigs = [6, 8, 8, 4]; 
-    let nodes = []; 
-
-    let animationFrameId;
-    let pulseTimer;
-
-    function initFCNN() {
-        createNodes('layer-input', layerConfigs[0]);
-        createNodes('layer-hidden-1', layerConfigs[1]);
-        createNodes('layer-hidden-2', layerConfigs[2]);
-        createNodes('layer-output', layerConfigs[3]);
-
-        const outputContainer = document.getElementById('email-output');
-        outputContainer.innerHTML = '';
-        for(let char of targetEmail) {
-            let span = document.createElement('div');
-            span.className = 'char-box';
-            span.innerText = getRandomChar(); 
-            outputContainer.appendChild(span);
-        }
-
-        setTimeout(() => {
-            calculateNodePositions();
-            startNetworkAnimation();
-        }, 100);
-    }
-
-    function createNodes(containerId, count) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-        for(let i=0; i<count; i++) {
-            let div = document.createElement('div');
-            div.className = 'node';
-            container.appendChild(div);
-        }
-    }
-
-    function getRandomChar() {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@&";
-        return chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    function calculateNodePositions() {
-        nodes = [];
-        const layerIds = ['layer-input', 'layer-hidden-1', 'layer-hidden-2', 'layer-output'];
-        const wrapperRect = document.querySelector('.fcnn-wrapper').getBoundingClientRect();
-
-        layerIds.forEach((id) => {
-            let layerNodes = [];
-            const elems = document.getElementById(id).children;
-            for(let el of elems) {
-                const rect = el.getBoundingClientRect();
-                layerNodes.push({
-                    x: rect.left - wrapperRect.left + rect.width/2,
-                    y: rect.top - wrapperRect.top + rect.height/2,
-                    elem: el
-                });
-            }
-            nodes.push(layerNodes);
-        });
-        const canvas = document.getElementById('network-canvas');
-        canvas.width = wrapperRect.width;
-        canvas.height = wrapperRect.height;
-    }
-
-    function startNetworkAnimation() {
-        const canvas = document.getElementById('network-canvas');
-        const ctx = canvas.getContext('2d');
-        const pulses = []; 
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = "rgba(0, 243, 255, 0.1)";
-            ctx.lineWidth = 1;
-            for(let l=0; l < nodes.length - 1; l++) {
-                let currentLayer = nodes[l];
-                let nextLayer = nodes[l+1];
-                for(let n1 of currentLayer) {
-                    for(let n2 of nextLayer) {
-                        ctx.beginPath();
-                        ctx.moveTo(n1.x, n1.y);
-                        ctx.lineTo(n2.x, n2.y);
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            for (let i = 0; i < pulses.length; i++) {
-                let p = pulses[i];
-                p.progress += p.speed;
-                let startNode = nodes[p.layer][p.startIdx];
-                let endNode = nodes[p.layer+1][p.endIdx];
-                let curX = startNode.x + (endNode.x - startNode.x) * p.progress;
-                let curY = startNode.y + (endNode.y - startNode.y) * p.progress;
-
-                ctx.beginPath();
-                ctx.arc(curX, curY, 3, 0, Math.PI * 2);
-                ctx.fillStyle = "#fff";
-                ctx.shadowBlur = 10; ctx.shadowColor = "#00f3ff"; ctx.fill(); ctx.shadowBlur = 0;
-
-                if(p.progress >= 1) {
-                    endNode.elem.classList.add('active');
-                    setTimeout(() => endNode.elem.classList.remove('active'), 100);
-                    if (p.layer + 1 < nodes.length - 1) spawnPulse(p.layer + 1, p.endIdx); 
-                    pulses.splice(i, 1);
-                    i--;
-                }
-            }
-            animationFrameId = requestAnimationFrame(animate);
-        }
-        animate();
-
-        pulseTimer = setInterval(() => {
-            const inputLayer = nodes[0];
-            const randIdx = Math.floor(Math.random() * inputLayer.length);
-            inputLayer[randIdx].elem.classList.add('input-active');
-            setTimeout(() => inputLayer[randIdx].elem.classList.remove('input-active'), 200);
-            spawnPulse(0, randIdx);
-        }, 300);
-
-        function spawnPulse(layerIdx, startNodeIdx) {
-            const nextLayerCount = nodes[layerIdx+1].length;
-            const branchCount = Math.floor(Math.random() * 2) + 1; 
-            for(let k=0; k<branchCount; k++) {
-                pulses.push({
-                    layer: layerIdx, startIdx: startNodeIdx, endIdx: Math.floor(Math.random() * nextLayerCount),
-                    progress: 0, speed: 0.05 + Math.random() * 0.05
-                });
-            }
-        }
-
-        let revealIndex = 0;
-        const charBoxes = document.querySelectorAll('.char-box');
-        
-        const revealInterval = setInterval(() => {
-            if(revealIndex >= targetEmail.length) {
-                clearInterval(revealInterval);
-                clearInterval(pulseTimer); 
-                
-                document.querySelector('#stage-result h2').innerText = "DECRYPTION COMPLETE";
-                document.getElementById('copyBtn').classList.add('show');
-                
-                setTimeout(() => {
-                    cancelAnimationFrame(animationFrameId);
-                }, 1000);
-                return;
-            }
-
-            for(let j = revealIndex; j < targetEmail.length; j++) {
-                charBoxes[j].innerText = getRandomChar();
-            }
-
-            charBoxes[revealIndex].innerText = targetEmail[revealIndex];
-            charBoxes[revealIndex].classList.add('revealed');
-            revealIndex++;
-        }, 150); 
-    }
-
-    function copyEmail() {
-        navigator.clipboard.writeText(targetEmail).then(() => {
-            const btn = document.getElementById('copyBtn');
-            const original = btn.innerText;
-            btn.innerText = "COPIED TO CLIPBOARD";
-            btn.style.background = "#fff"; btn.style.color = "#000";
-            setTimeout(() => {
-                btn.innerText = original;
-                btn.style.background = "var(--neon-purple)"; btn.style.color = "#fff";
-            }, 2000);
-        });
-    }
-</script>
-
-</body>
-</html>
+            <div class="layer-column" id="layer-hidden-2
