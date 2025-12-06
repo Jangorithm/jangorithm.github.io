@@ -1,1 +1,151 @@
-"hello jangorithm" 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Slot Machine</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+        }
+
+        .slot-machine {
+            display: flex;
+            gap: 2px;
+            padding: 20px 40px;
+            background: #2b2b2b;
+            border-radius: 15px;
+            border: 4px solid #00d2ff;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .window {
+            width: 35px;
+            height: 50px;
+            overflow: hidden;
+            background: #ffffff;
+            color: #333;
+            border-radius: 4px;
+            position: relative;
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+
+        .reel {
+            display: flex;
+            flex-direction: column;
+            transition: transform 2.5s cubic-bezier(0.15, 0.9, 0.25, 1);
+            text-align: center;
+            line-height: 50px;
+        }
+
+        .copy-btn {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a1a1a;
+            background-color: #00d2ff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+            transition: all 0.3s ease;
+            opacity: 0; 
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+
+        .copy-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .copy-btn:hover {
+            background-color: #7ce4ff;
+            transform: scale(1.05);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+<div class="slot-machine" id="slotMachine"></div>
+<button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email</button>
+
+<script>
+    const targetText = "kowm6170@naver.com";
+    const charPool = "abcdefghijklmnopqrstuvwxyz0123456789@."; 
+    const container = document.getElementById('slotMachine');
+    const copyBtn = document.getElementById('copyBtn');
+    const itemHeight = 50;
+
+    function createReel(targetChar, index) {
+        const windowDiv = document.createElement('div');
+        windowDiv.className = 'window';
+
+        const reelDiv = document.createElement('div');
+        reelDiv.className = 'reel';
+
+        let content = '';
+        const poolLength = charPool.length;
+        const loops = 3; 
+        
+        for (let k = 0; k < loops; k++) {
+            for (let i = 0; i < poolLength; i++) {
+                content += `<div>${charPool[i]}</div>`;
+            }
+        }
+        
+        reelDiv.innerHTML = content;
+        windowDiv.appendChild(reelDiv);
+        container.appendChild(windowDiv);
+
+        setTimeout(() => {
+            const targetIndex = charPool.indexOf(targetChar);
+            const safeIndex = targetIndex === -1 ? 0 : targetIndex;
+            const finalPosition = ((loops - 1) * poolLength + safeIndex) * itemHeight;
+
+            reelDiv.style.transform = `translateY(-${finalPosition}px)`;
+            
+        }, 100 + index * 100);
+    }
+
+    for (let i = 0; i < targetText.length; i++) {
+        createReel(targetText[i], i);
+    }
+
+    setTimeout(() => {
+        copyBtn.classList.add('show');
+    }, 3500);
+
+    function copyEmail() {
+        navigator.clipboard.writeText(targetText).then(() => {
+            const originalText = "Copy Email"; 
+            copyBtn.innerText = "Copied! ✅"; 
+            copyBtn.style.backgroundColor = "#4cd964"; 
+
+            setTimeout(() => {
+                copyBtn.innerText = originalText;
+                copyBtn.style.backgroundColor = "#00d2ff"; 
+            }, 2000);
+        }).catch(err => {
+            console.error(err);
+            alert('Failed to copy.');
+        });
+    }
+</script>
+
+</body>
+</html>
